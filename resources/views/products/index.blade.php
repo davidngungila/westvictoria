@@ -131,8 +131,8 @@
                     
                     <select name="category" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>{{ $category }}</option>
+                        @foreach($categories as $id => $name)
+                            <option value="{{ $id }}" {{ request('category') == $id ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
 
@@ -221,7 +221,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {{ $product->category }}
+                                            {{ $product->category && is_object($product->category) ? $product->category->name : 'No Category' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
