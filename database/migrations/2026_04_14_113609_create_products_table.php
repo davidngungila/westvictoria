@@ -20,9 +20,9 @@ return new class extends Migration
             $table->decimal('cost_price', 10, 2);
             $table->integer('quantity')->default(0);
             $table->integer('min_quantity')->default(0);
-            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('brand_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->unsignedBigInteger('brand_id')->nullable();
+            $table->unsignedBigInteger('supplier_id')->nullable();
             $table->enum('status', ['active', 'inactive', 'discontinued'])->default('active');
             $table->string('image')->nullable();
             $table->string('barcode')->nullable()->unique();
