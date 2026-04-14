@@ -10,6 +10,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BrandController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +107,9 @@ Route::get('/sales/{sale}/receipt', [SaleController::class, 'generateReceipt'])-
 Route::get('/sales/export', [SaleController::class, 'export'])->name('sales.export');
 
 // Customer CRUD Routes
+Route::get('/customers/dashboard', function () {
+    return view('customers.dashboard');
+})->name('customers.dashboard');
 Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
 Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
 Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
@@ -115,13 +120,31 @@ Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->
 Route::get('/api/customers/search', [CustomerController::class, 'search'])->name('customers.search');
 
 // Supplier CRUD Routes
-Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+Route::get('/suppliers/dashboard', [SupplierController::class, 'index'])->name('suppliers.index');
 Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
 Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
 Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
 Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
 Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
 Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+
+// Category CRUD Routes
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+// Brand CRUD Routes
+Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
+Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
+Route::get('/brands/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
 
 // Purchases Routes
 Route::get('/purchases/dashboard', function () {
@@ -157,7 +180,6 @@ Route::get('/inventory/warehouses', function () {
 Route::get('/customers/dashboard', function () {
     return view('customers.dashboard');
 })->name('customers.dashboard');
-
 Route::get('/customers/management', function () {
     return view('customers.management');
 })->name('customers.management');

@@ -17,9 +17,9 @@ class Product extends Model
         'cost_price',
         'quantity',
         'min_quantity',
-        'category',
-        'brand',
-        'supplier',
+        'category_id',
+        'brand_id',
+        'supplier_id',
         'status',
         'image',
         'barcode',
@@ -35,6 +35,21 @@ class Product extends Model
         'min_quantity' => 'integer',
         'weight' => 'decimal:2',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
     /**
      * Get the formatted price.

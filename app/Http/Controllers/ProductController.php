@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Brand;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,12 +56,12 @@ class ProductController extends Controller
      */
     public function create()
     {
-        // Get dynamic data from database
-        $categories = Product::distinct('category')->pluck('category')->filter()->sort();
-        $suppliers = Product::distinct('supplier')->pluck('supplier')->filter()->sort();
-        $brands = Product::distinct('brand')->pluck('brand')->filter()->sort();
+        // Get dynamic data from database models
+        $categories = Category::where('status', 'active')->orderBy('name')->get();
+        $brands = Brand::where('status', 'active')->orderBy('name')->get();
+        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
         
-        return view('products.create', compact('categories', 'suppliers', 'brands'));
+        return view('products.create', compact('categories', 'brands', 'suppliers'));
     }
 
     /**
@@ -73,9 +76,9 @@ class ProductController extends Controller
             'cost_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
             'min_quantity' => 'required|integer|min:0',
-            'category' => 'required|string|max:100',
-            'brand' => 'nullable|string|max:100',
-            'supplier' => 'nullable|string|max:100',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'status' => 'required|in:active,inactive,discontinued',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'barcode' => 'nullable|string|max:50|unique:products,barcode',
@@ -85,8 +88,12 @@ class ProductController extends Controller
         ]);
 
         try {
+            // Get category name for SKU generation
+            $category = Category::find($validated['category_id']);
+            $categoryName = $category ? $category->name : null;
+            
             // Auto-generate unique SKU
-            $validated['sku'] = Product::generateUniqueSku($validated['name'], $validated['category']);
+            $validated['sku'] = Product::generateUniqueSku($validated['name'], $categoryName);
             
             // Handle image upload
             if ($request->hasFile('image')) {

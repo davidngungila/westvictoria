@@ -20,9 +20,9 @@ return new class extends Migration
             $table->decimal('cost_price', 10, 2);
             $table->integer('quantity')->default(0);
             $table->integer('min_quantity')->default(0);
-            $table->string('category');
-            $table->string('brand')->nullable();
-            $table->string('supplier')->nullable();
+            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('brand_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('status', ['active', 'inactive', 'discontinued'])->default('active');
             $table->string('image')->nullable();
             $table->string('barcode')->nullable()->unique();
@@ -33,7 +33,9 @@ return new class extends Migration
             
             // Indexes for better performance
             $table->index('sku');
-            $table->index('category');
+            $table->index('category_id');
+            $table->index('brand_id');
+            $table->index('supplier_id');
             $table->index('status');
             $table->index('barcode');
         });

@@ -72,33 +72,33 @@
                         <!-- Category and Brand -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
-                                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">
                                     Category <span class="text-red-500">*</span>
                                 </label>
-                                <select id="category" name="category" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('category') border-red-500 @enderror">
+                                <select id="category_id" name="category_id" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('category_id') border-red-500 @enderror">
                                     <option value="">Select a category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category }}" {{ old('category') == $category ? 'selected' : '' }}>{{ $category }}</option>
+                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('category')
+                                @error('category_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                             
                             <div>
-                                <label for="brand" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-1">
                                     Brand
                                 </label>
-                                <select id="brand" name="brand"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('brand') border-red-500 @enderror">
+                                <select id="brand_id" name="brand_id"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('brand_id') border-red-500 @enderror">
                                     <option value="">Select a brand</option>
                                     @foreach($brands as $brand)
-                                        <option value="{{ $brand }}" {{ old('brand') == $brand ? 'selected' : '' }}>{{ $brand }}</option>
+                                        <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('brand')
+                                @error('brand_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -203,17 +203,17 @@
                         <!-- Additional Fields -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div>
-                                <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="supplier_id" class="block text-sm font-medium text-gray-700 mb-1">
                                     Supplier
                                 </label>
-                                <select id="supplier" name="supplier"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('supplier') border-red-500 @enderror">
+                                <select id="supplier_id" name="supplier_id"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('supplier_id') border-red-500 @enderror">
                                     <option value="">Select a supplier</option>
                                     @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier }}" {{ old('supplier') == $supplier ? 'selected' : '' }}>{{ $supplier }}</option>
+                                        <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('supplier')
+                                @error('supplier_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
