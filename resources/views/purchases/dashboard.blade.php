@@ -8,16 +8,16 @@
     <div class="mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">TZS 28,450,000</h1>
+                <h1 class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">TZS {{ number_format($monthlyPurchases, 2) }}</h1>
                 <p class="text-gray-600 mt-1">Overview of your purchase orders and supplier management</p>
             </div>
             <div class="flex space-x-3 mt-4 lg:mt-0">
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                <a href="{{ route('purchases.create') }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     New Purchase Order
-                </button>
+                </a>
                 <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -34,8 +34,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Today's Purchases</p>
-                    <p class="text-2xl font-bold text-gray-900">$8,750</p>
-                    <p class="text-xs text-green-600">+15% from yesterday</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS {{ number_format($todayPurchases, 2) }}</p>
+                    <p class="text-xs text-green-600">Live data from database</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,8 +49,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Monthly Purchases</p>
-                    <p class="text-2xl font-bold text-gray-900">$28,450</p>
-                    <p class="text-xs text-green-600">+8% from last month</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS {{ number_format($monthlyPurchases, 2) }}</p>
+                    <p class="text-xs text-green-600">Current month</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,8 +64,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Active Orders</p>
-                    <p class="text-2xl font-bold text-gray-900">34</p>
-                    <p class="text-xs text-orange-600">5 pending approval</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $activeOrders }}</p>
+                    <p class="text-xs text-orange-600">{{ $pendingApprovals }} pending approval</p>
                 </div>
                 <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,8 +79,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Suppliers</p>
-                    <p class="text-2xl font-bold text-gray-900">28</p>
-                    <p class="text-xs text-green-600">+2 this month</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalSuppliers }}</p>
+                    <p class="text-xs text-green-600">Total suppliers</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;">Recent Purchase Orders</h3>
-                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</button>
+                        <a href="{{ route('purchases.orders') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -138,60 +138,36 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($recentPurchases as $purchase)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0456</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TechPro Supplies</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,450.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $purchase->purchase_number }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $purchase->supplier ? $purchase->supplier->name : 'No Supplier' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS {{ number_format($purchase->final_amount, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Received
-                                    </span>
+                                    {!! $purchase->status_label !!}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Apr 12, 2026</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $purchase->expected_date ? $purchase->expected_date->format('M d, Y') : 'Not set' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center space-x-2">
-                                        <button class="text-blue-600 hover:text-blue-900">View</button>
+                                        <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
                                         <span class="text-gray-300">|</span>
-                                        <button class="text-green-600 hover:text-green-900">Invoice</button>
+                                        @if($purchase->status === 'in_transit')
+                                            <a href="#" class="text-green-600 hover:text-green-900">Track</a>
+                                        @elseif($purchase->status === 'ordered')
+                                            <a href="#" class="text-orange-600 hover:text-orange-900">Cancel</a>
+                                        @else
+                                            <a href="#" class="text-green-600 hover:text-green-900">Invoice</a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0455</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Global Materials Ltd</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$8,750.00</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        In Transit
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Apr 15, 2026</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <button class="text-blue-600 hover:text-blue-900">View</button>
-                                        <span class="text-gray-300">|</span>
-                                        <button class="text-green-600 hover:text-green-900">Track</button>
-                                    </div>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No purchase orders found. <a href="{{ route('purchases.create') }}" class="text-blue-600 hover:text-blue-800">Create your first purchase order</a>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0454</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Office Depot Pro</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,280.00</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Ordered
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Apr 18, 2026</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
-                                        <button class="text-blue-600 hover:text-blue-900">View</button>
-                                        <span class="text-gray-300">|</span>
-                                        <button class="text-orange-600 hover:text-orange-900">Cancel</button>
-                                    </div>
-                                </td>
-                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -207,6 +183,7 @@
                 </div>
                 <div class="p-6">
                     <div class="space-y-3">
+                        @forelse($topSuppliers as $supplier)
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
@@ -216,42 +193,17 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900">TechPro Supplies</p>
-                                    <p class="text-xs text-gray-500">12 orders</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ $supplier->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $supplier->purchases_count ?? 0 }} orders</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">$45,230</span>
+                            <span class="text-sm font-bold text-gray-900">TZS {{ number_format($supplier->purchases_sum_final_amount ?? 0, 2) }}</span>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
-                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2h-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Global Materials Ltd</p>
-                                    <p class="text-xs text-gray-500">8 orders</p>
-                                </div>
-                            </div>
-                            <span class="text-sm font-bold text-gray-900">$32,100</span>
+                        @empty
+                        <div class="text-center text-gray-500 py-4">
+                            <p class="text-sm">No suppliers found</p>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                    <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
-                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2h-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">Office Depot Pro</p>
-                                    <p class="text-xs text-gray-500">15 orders</p>
-                                </div>
-                            </div>
-                            <span class="text-sm font-bold text-gray-900">$28,450</span>
-                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -268,28 +220,28 @@
                                 <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                                 <span class="text-sm text-gray-700">Ordered</span>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">12</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $purchaseStatuses['ordered'] ?? 0 }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                                 <span class="text-sm text-gray-700">In Transit</span>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">8</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $purchaseStatuses['in_transit'] ?? 0 }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                                 <span class="text-sm text-gray-700">Received</span>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">14</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $purchaseStatuses['received'] ?? 0 }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
                                 <span class="text-sm text-gray-700">Cancelled</span>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">2</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $purchaseStatuses['cancelled'] ?? 0 }}</span>
                         </div>
                     </div>
                 </div>
@@ -301,15 +253,20 @@
                     <h3 class="text-lg font-semibold text-gray-800">Quick Actions</h3>
                 </div>
                 <div class="p-6 space-y-3">
-                    <button class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                    <a href="{{ route('purchases.create') }}" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm inline-block text-center">
                         Create Purchase Order
-                    </button>
-                    <button class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                    </a>
+                    <a href="{{ route('suppliers.dashboard') }}" class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm inline-block text-center">
                         Manage Suppliers
-                    </button>
-                    <button class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
-                        Pending Approvals
-                    </button>
+                    </a>
+                    <div class="relative">
+                        <button class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm text-left">
+                            Pending Approvals
+                            @if($pendingApprovals > 0)
+                                <span class="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ $pendingApprovals }}</span>
+                            @endif
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

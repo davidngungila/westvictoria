@@ -148,7 +148,51 @@ Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('bra
 
 // Purchases Routes
 Route::get('/purchases/dashboard', function () {
-    return view('purchases.dashboard');
+    // Get purchase statistics from database
+    $todayPurchases = \App\Models\Purchase::whereDate('order_date', today())->sum('final_amount');
+    $monthlyPurchases = \App\Models\Purchase::whereMonth('order_date', now()->month)
+        ->whereYear('order_date', now()->year)
+        ->sum('final_amount');
+    $activeOrders = \App\Models\Purchase::whereIn('status', ['ordered', 'in_transit'])->count();
+    $totalSuppliers = \App\Models\Supplier::count();
+
+    // Get recent purchases with relationships
+    $recentPurchases = \App\Models\Purchase::with(['supplier', 'creator'])
+        ->orderBy('order_date', 'desc')
+        ->limit(10)
+        ->get();
+
+    // Get top suppliers by purchase amount
+    $topSuppliers = \App\Models\Supplier::select('suppliers.*')
+        ->selectRaw('COUNT(purchases.id) as purchases_count')
+        ->selectRaw('COALESCE(SUM(purchases.final_amount), 0) as purchases_sum_final_amount')
+        ->leftJoin('purchases', 'suppliers.id', '=', 'purchases.supplier_id')
+        ->groupBy('suppliers.id')
+        ->orderByDesc('purchases_sum_final_amount')
+        ->limit(5)
+        ->get();
+
+    // Get purchase status counts
+    $purchaseStatuses = [
+        'ordered' => \App\Models\Purchase::where('status', 'ordered')->count(),
+        'in_transit' => \App\Models\Purchase::where('status', 'in_transit')->count(),
+        'received' => \App\Models\Purchase::where('status', 'received')->count(),
+        'cancelled' => \App\Models\Purchase::where('status', 'cancelled')->count(),
+    ];
+
+    // Get pending approvals count
+    $pendingApprovals = \App\Models\Purchase::where('status', 'ordered')->count();
+
+    return view('purchases.dashboard', compact(
+        'todayPurchases',
+        'monthlyPurchases',
+        'activeOrders',
+        'totalSuppliers',
+        'recentPurchases',
+        'topSuppliers',
+        'purchaseStatuses',
+        'pendingApprovals'
+    ));
 })->name('purchases.dashboard');
 
 Route::get('/purchases/orders', function () {

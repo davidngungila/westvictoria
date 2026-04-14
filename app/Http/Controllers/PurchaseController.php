@@ -1,0 +1,292 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
+use App\Models\Supplier;
+use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class PurchaseController extends Controller
+{
+    /**
+     * Display the purchases dashboard.
+     */
+    public function dashboard()
+    {
+        // Get purchase statistics
+        $todayPurchases = Purchase::whereDate('order_date', today())->sum('final_amount');
+        $monthlyPurchases = Purchase::whereMonth('order_date', now()->month)
+            ->whereYear('order_date', now()->year)
+            ->sum('final_amount');
+        $activeOrders = Purchase::whereIn('status', ['ordered', 'in_transit'])->count();
+        $totalSuppliers = Supplier::count();
+
+        // Get recent purchases with relationships
+        $recentPurchases = Purchase::with(['supplier', 'creator'])
+            ->orderBy('order_date', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get top suppliers by purchase amount
+        $topSuppliers = Supplier::withCount(['purchases'])
+            ->withSum('purchases', 'final_amount')
+            ->orderByDesc('purchases_sum_final_amount')
+            ->limit(5)
+            ->get();
+
+        // Get purchase status counts
+        $purchaseStatuses = [
+            'ordered' => Purchase::where('status', 'ordered')->count(),
+            'in_transit' => Purchase::where('status', 'in_transit')->count(),
+            'received' => Purchase::where('status', 'received')->count(),
+            'cancelled' => Purchase::where('status', 'cancelled')->count(),
+        ];
+
+        // Get monthly purchase trend for the last 6 months
+        $monthlyTrend = Purchase::select(
+            DB::raw('MONTH(order_date) as month'),
+            DB::raw('YEAR(order_date) as year'),
+            DB::raw('SUM(final_amount) as total_amount'),
+            DB::raw('COUNT(*) as order_count')
+        )
+            ->where('order_date', '>=', now()->subMonths(6))
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Get pending approvals count
+        $pendingApprovals = Purchase::where('status', 'ordered')->count();
+
+        return view('purchases.dashboard', compact(
+            'todayPurchases',
+            'monthlyPurchases',
+            'activeOrders',
+            'totalSuppliers',
+            'recentPurchases',
+            'topSuppliers',
+            'purchaseStatuses',
+            'monthlyTrend',
+            'pendingApprovals'
+        ));
+    }
+
+    /**
+     * Display a listing of the purchases.
+     */
+    public function index()
+    {
+        $purchases = Purchase::with(['supplier', 'creator'])
+            ->orderBy('order_date', 'desc')
+            ->paginate(20);
+
+        return view('purchases.index', compact('purchases'));
+    }
+
+    /**
+     * Show the form for creating a new purchase.
+     */
+    public function create()
+    {
+        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
+        $products = Product::where('status', 'active')->orderBy('name')->get();
+
+        return view('purchases.create', compact('suppliers', 'products'));
+    }
+
+    /**
+     * Store a newly created purchase in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'supplier_id' => 'required|exists:suppliers,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'expected_date' => 'nullable|date|after:today',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Calculate totals
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $totalAmount += $item['quantity'] * $item['unit_price'];
+            }
+
+            // Create purchase
+            $purchase = Purchase::create([
+                'purchase_number' => 'PO-' . date('Y') . '-' . str_pad(Purchase::count() + 1, 4, '0', STR_PAD_LEFT),
+                'supplier_id' => $request->supplier_id,
+                'total_amount' => $totalAmount,
+                'tax_amount' => 0, // Calculate tax if needed
+                'discount_amount' => 0, // Calculate discount if needed
+                'final_amount' => $totalAmount,
+                'status' => 'ordered',
+                'order_date' => now(),
+                'expected_date' => $request->expected_date,
+                'notes' => $request->notes,
+                'created_by' => Auth::id(),
+            ]);
+
+            // Create purchase items
+            foreach ($request->items as $item) {
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['quantity'] * $item['unit_price'],
+                    'received_quantity' => 0,
+                    'notes' => $item['notes'] ?? null,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('purchases.dashboard')
+                ->with('success', 'Purchase order created successfully!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()
+                ->with('error', 'Failed to create purchase order. Please try again.')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Display the specified purchase.
+     */
+    public function show(Purchase $purchase)
+    {
+        $purchase->load(['supplier', 'creator', 'purchaseItems.product']);
+        return view('purchases.show', compact('purchase'));
+    }
+
+    /**
+     * Show the form for editing the specified purchase.
+     */
+    public function edit(Purchase $purchase)
+    {
+        if ($purchase->status !== 'ordered') {
+            return back()->with('error', 'Only ordered purchases can be edited.');
+        }
+
+        $purchase->load(['supplier', 'purchaseItems.product']);
+        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
+        $products = Product::where('status', 'active')->orderBy('name')->get();
+
+        return view('purchases.edit', compact('purchase', 'suppliers', 'products'));
+    }
+
+    /**
+     * Update the specified purchase in storage.
+     */
+    public function update(Request $request, Purchase $purchase)
+    {
+        if ($purchase->status !== 'ordered') {
+            return back()->with('error', 'Only ordered purchases can be edited.');
+        }
+
+        $request->validate([
+            'supplier_id' => 'required|exists:suppliers,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'expected_date' => 'nullable|date|after:today',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Delete existing items
+            $purchase->purchaseItems()->delete();
+
+            // Calculate totals
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $totalAmount += $item['quantity'] * $item['unit_price'];
+            }
+
+            // Update purchase
+            $purchase->update([
+                'supplier_id' => $request->supplier_id,
+                'total_amount' => $totalAmount,
+                'final_amount' => $totalAmount,
+                'expected_date' => $request->expected_date,
+                'notes' => $request->notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Create new purchase items
+            foreach ($request->items as $item) {
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total_price' => $item['quantity'] * $item['unit_price'],
+                    'received_quantity' => 0,
+                    'notes' => $item['notes'] ?? null,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('purchases.dashboard')
+                ->with('success', 'Purchase order updated successfully!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()
+                ->with('error', 'Failed to update purchase order. Please try again.')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Remove the specified purchase from storage.
+     */
+    public function destroy(Purchase $purchase)
+    {
+        if ($purchase->status !== 'ordered') {
+            return back()->with('error', 'Only ordered purchases can be deleted.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $purchase->purchaseItems()->delete();
+            $purchase->delete();
+            DB::commit();
+            return redirect()->route('purchases.dashboard')
+                ->with('success', 'Purchase order deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Failed to delete purchase order. Please try again.');
+        }
+    }
+
+    /**
+     * Update purchase status.
+     */
+    public function updateStatus(Request $request, Purchase $purchase)
+    {
+        $request->validate([
+            'status' => 'required|in:ordered,in_transit,received,cancelled',
+            'received_date' => 'nullable|required_if:status,received|date',
+        ]);
+
+        $purchase->update([
+            'status' => $request->status,
+            'received_date' => $request->received_date,
+            'updated_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Purchase status updated successfully!');
+    }
+}
