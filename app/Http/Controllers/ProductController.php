@@ -120,6 +120,9 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        // Load product with relationships
+        $product->load(['category', 'brand', 'supplier']);
+        
         // Get all sale items for this product to show sales history
         $saleItems = \App\Models\SaleItem::where('product_id', $product->id)
             ->with('sale')

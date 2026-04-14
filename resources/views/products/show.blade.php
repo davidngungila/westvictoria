@@ -54,7 +54,7 @@
                                     <p class="text-gray-600 mt-1">{{ $product->description ?: 'No description available' }}</p>
                                     <div class="flex items-center space-x-4 mt-3">
                                         <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                            {{ $product->category }}
+                                            {{ $product->category ? $product->category->name : 'No Category' }}
                                         </span>
                                         <span class="px-2 py-1 {{ $product->quantity <= 0 ? 'bg-red-100 text-red-800' : ($product->isLowStock() ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800') }} text-xs rounded-full">
                                             {{ $product->quantity <= 0 ? 'Out of Stock' : ($product->isLowStock() ? 'Low Stock' : 'In Stock') }}
@@ -83,7 +83,7 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Brand</p>
-                                <p class="text-gray-900">{{ $product->brand ?: 'Not specified' }}</p>
+                                <p class="text-gray-900">{{ $product->brand ? $product->brand->name : 'Not specified' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Weight</p>
@@ -102,7 +102,7 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Supplier</p>
-                                <p class="text-gray-900">{{ $product->supplier ?: 'Not specified' }}</p>
+                                <p class="text-gray-900">{{ $product->supplier ? $product->supplier->name : 'Not specified' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Status</p>
