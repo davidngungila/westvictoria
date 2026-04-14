@@ -37,7 +37,10 @@ class SaleController extends Controller
      */
     public function pos()
     {
-        $products = Product::where('status', 'active')->where('quantity', '>', 0)->get();
+        $products = Product::with(['category', 'brand', 'supplier'])
+            ->where('status', 'active')
+            ->where('quantity', '>', 0)
+            ->get();
         return view('sales.pos', compact('products'));
     }
 

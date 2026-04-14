@@ -182,7 +182,7 @@
                 <!-- Product Categories -->
                 <div class="mt-4 flex flex-wrap gap-2">
                     <button onclick="filterCategory('all')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200">All</button>
-                    @foreach($products->pluck('category')->unique() as $category)
+                    @foreach($products->pluck('category.name')->filter()->unique() as $category)
                         <button onclick="filterCategory('{{ $category }}')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200">{{ $category }}</button>
                     @endforeach
                 </div>
@@ -196,7 +196,7 @@
                         @if($product->quantity > 0)
                             <div class="product-card border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer" 
                                  onclick="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }}, '{{ $product->sku }}', {{ $product->quantity }})"
-                                 data-category="{{ $product->category }}"
+                                 data-category="{{ $product->category ? $product->category->name : 'No Category' }}"
                                  data-name="{{ $product->name }}"
                                  data-sku="{{ $product->sku }}">
                                 <div class="flex items-center justify-between mb-2">
