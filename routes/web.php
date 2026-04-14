@@ -13,8 +13,44 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Authentication Routes
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::post('/login', function () {
+    // Simple login logic for demonstration
+    $email = request('email');
+    $password = request('password');
+    
+    // For demo purposes, accept any email/password
+    // In production, implement proper authentication
+    if ($email && $password) {
+        return redirect('/dashboard');
+    }
+    
+    return back()->with('error', 'Invalid credentials');
+})->name('login.submit');
+
+Route::post('/logout', function () {
+    return redirect('/login');
+})->name('logout');
+
+// Password Reset Routes
+Route::get('/password/reset', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
+
+Route::post('/password/email', function () {
+    $email = request('email');
+    
+    // For demo purposes, just show success message
+    // In production, implement actual password reset email sending
+    return back()->with('status', 'Password reset link has been sent to your email.');
+})->name('password.email');
+
 Route::get('/', function () {
-    return view('dashboard');
+    return redirect('/login');
 });
 
 Route::get('/dashboard', function () {
