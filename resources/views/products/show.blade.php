@@ -303,7 +303,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-col space-y-1">
-                                            <span class="text-xs">{{ $saleItem->sale->payment_status_label }}</span>
+                                            <span>{!! $saleItem->sale->payment_status_label !!}</span>
                                             <span class="text-xs text-gray-500">{{ ucfirst($saleItem->sale->payment_method) }}</span>
                                         </div>
                                     </td>
