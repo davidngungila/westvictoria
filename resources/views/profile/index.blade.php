@@ -19,15 +19,6 @@
                 <p class="text-gray-600 mt-1">Manage your personal information and preferences</p>
             </div>
             <div class="flex space-x-3 mt-4 lg:mt-0">
-                <form method="POST" action="{{ route('profile.update') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Save Changes
-                    </button>
-                </form>
                 <a href="{{ route('dashboard') }}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -74,6 +65,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
                             <input type="text" name="position" value="{{ $user->position ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Save Changes
+                            </button>
                         </div>
                     </div>
                 </form>
