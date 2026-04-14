@@ -54,6 +54,16 @@ class CategoryController extends Controller
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Category "' . $category->name . '" created successfully.',
+                'category' => $category,
+                'redirect_url' => route('categories.index')
+            ]);
+        }
+
         return redirect()->route('categories.index')
             ->with('success', 'Category "' . $category->name . '" created successfully.');
     }
@@ -95,6 +105,16 @@ class CategoryController extends Controller
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Category "' . $category->name . '" updated successfully.',
+                'category' => $category,
+                'redirect_url' => route('categories.index')
+            ]);
+        }
+
         return redirect()->route('categories.index')
             ->with('success', 'Category "' . $category->name . '" updated successfully.');
     }
@@ -102,16 +122,35 @@ class CategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         // Check if category has products
         if ($category->products()->exists()) {
+            $errorMessage = 'Cannot delete category "' . $category->name . '" because it has associated products.';
+            
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+
             return redirect()->route('categories.index')
-                ->with('error', 'Cannot delete category "' . $category->name . '" because it has associated products.');
+                ->with('error', $errorMessage);
         }
 
         $categoryName = $category->name;
         $category->delete();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Category "' . $categoryName . '" deleted successfully.',
+                'redirect_url' => route('categories.index')
+            ]);
+        }
 
         return redirect()->route('categories.index')
             ->with('success', 'Category "' . $categoryName . '" deleted successfully.');

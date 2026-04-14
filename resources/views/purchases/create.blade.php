@@ -30,16 +30,17 @@
                     <h2 class="text-lg font-semibold text-gray-800">Purchase Order Details</h2>
                 </div>
                 <div class="p-6">
-                    <form class="space-y-6">
+                    <form action="{{ route('purchases.store') }}" method="POST" class="space-y-6">
+                        @csrf
                         <!-- Order Information -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div>
                                 <label for="po_number" class="block text-sm font-medium text-gray-700 mb-1">
                                     PO Number <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" id="po_number" name="po_number" required
+                                <input type="text" id="po_number" name="po_number" value="{{ $nextPoNumber }}" required
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                                       placeholder="Auto-generated or manual">
+                                       readonly>
                             </div>
                             
                             <div>
@@ -59,13 +60,12 @@
                                     <label for="supplier" class="block text-sm font-medium text-gray-700 mb-1">
                                         Supplier <span class="text-red-500">*</span>
                                     </label>
-                                    <select id="supplier" name="supplier" required
+                                    <select id="supplier_id" name="supplier_id" required
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                                         <option value="">Select a supplier</option>
-                                        <option value="techpro">TechPro Supplies</option>
-                                        <option value="global">Global Materials Ltd</option>
-                                        <option value="office">Office Depot Pro</option>
-                                        <option value="premium">Premium Supplies</option>
+                                        @foreach($suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}">{{ $supplier->name }} ({{ $supplier->supplier_id }})</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 
@@ -113,12 +113,11 @@
                                     <tbody id="order-items" class="bg-white divide-y divide-gray-200">
                                         <tr class="order-item-row">
                                             <td class="px-4 py-3 whitespace-nowrap">
-                                                <select class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                                                    <option>Select Product</option>
-                                                    <option>Laptop Pro 15"</option>
-                                                    <option>Wireless Mouse</option>
-                                                    <option>Office Chair</option>
-                                                    <option>Coffee Maker</option>
+                                                <select class="w-full px-2 py-1 border border-gray-300 rounded text-sm product-select">
+                                                    <option value="">Select Product</option>
+                                                    @foreach($products as $product)
+                                                        <option value="{{ $product->id }}" data-price="{{ $product->cost_price }}" data-name="{{ $product->name }}">{{ $product->name }} ({{ $product->sku }})</option>
+                                                    @endforeach
                                                 </select>
                                             </td>
                                             <td class="px-4 py-3 whitespace-nowrap">
@@ -186,11 +185,11 @@
                             <div class="space-y-2">
                                 <div class="flex justify-between">
                                     <span class="text-sm text-gray-600">Subtotal:</span>
-                                    <span id="subtotal" class="text-sm font-medium text-gray-900">$0.00</span>
+                                    <span id="subtotal" class="text-sm font-medium text-gray-900">TZS 0.00</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-gray-600">Tax (10%):</span>
-                                    <span id="tax" class="text-sm font-medium text-gray-900">$0.00</span>
+                                    <span id="tax" class="text-sm font-medium text-gray-900">TZS 0.00</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-gray-600">Shipping:</span>
@@ -199,7 +198,7 @@
                                 <div class="border-t pt-2 mt-2">
                                     <div class="flex justify-between">
                                         <span class="text-sm font-medium text-gray-700">Total:</span>
-                                        <span id="total" class="text-lg font-bold text-gray-900">$0.00</span>
+                                        <span id="total" class="text-lg font-bold text-gray-900">TZS 0.00</span>
                                     </div>
                                 </div>
                             </div>
@@ -207,10 +206,10 @@
 
                         <!-- Form Actions -->
                         <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
-                            <button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <button type="button" id="save-draft-btn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                                 Save as Draft
                             </button>
-                            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <button type="submit" id="create-order-btn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                 Create Order
                             </button>
                         </div>
@@ -231,17 +230,17 @@
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-sm font-medium text-gray-700">Monthly Budget</span>
-                                <span class="text-sm font-bold text-gray-900">$50,000</span>
+                                <span class="text-sm font-bold text-gray-900">TZS 50,000</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="bg-green-600 h-2 rounded-full" style="width: 43%"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">$21,500 spent (43%)</p>
+                            <p class="text-xs text-gray-500 mt-1">TZS 21,500 spent (43%)</p>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-sm font-medium text-gray-700">Remaining Budget</span>
-                                <span class="text-sm font-bold text-green-600">$28,500</span>
+                                <span class="text-sm font-bold text-green-600">TZS 28,500</span>
                             </div>
                         </div>
                     </div>
@@ -334,12 +333,11 @@ function addOrderItem() {
     newRow.className = 'order-item-row';
     newRow.innerHTML = `
         <td class="px-4 py-3 whitespace-nowrap">
-            <select class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                <option>Select Product</option>
-                <option>Laptop Pro 15"</option>
-                <option>Wireless Mouse</option>
-                <option>Office Chair</option>
-                <option>Coffee Maker</option>
+            <select class="w-full px-2 py-1 border border-gray-300 rounded text-sm product-select">
+                <option value="">Select Product</option>
+                @foreach($products as $product)
+                    <option value="{{ $product->id }}" data-price="{{ $product->cost_price }}" data-name="{{ $product->name }}">{{ $product->name }} ({{ $product->sku }})</option>
+                @endforeach
             </select>
         </td>
         <td class="px-4 py-3 whitespace-nowrap">
@@ -352,7 +350,7 @@ function addOrderItem() {
             <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="0.00" step="0.01" min="0">
         </td>
         <td class="px-4 py-3 whitespace-nowrap">
-            <span class="text-sm font-medium text-gray-900">$0.00</span>
+            <span class="text-sm font-medium text-gray-900">TZS 0.00</span>
         </td>
         <td class="px-4 py-3 whitespace-nowrap">
             <button type="button" onclick="removeOrderItem(this)" class="text-red-600 hover:text-red-800 text-sm">
@@ -382,7 +380,7 @@ function attachItemListeners() {
                 input.addEventListener('input', () => {
                     const quantity = parseFloat(quantityInput.value) || 0;
                     const price = parseFloat(priceInput.value) || 0;
-                    totalCell.textContent = `$${(quantity * price).toFixed(2)}`;
+                    totalCell.textContent = `TZS ${(quantity * price).toFixed(2)}`;
                     calculateTotals();
                 });
             }
@@ -406,9 +404,9 @@ function calculateTotals() {
     const shipping = parseFloat(document.getElementById('shipping').value) || 0;
     const total = subtotal + tax + shipping;
     
-    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
-    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('subtotal').textContent = `TZS ${subtotal.toFixed(2)}`;
+    document.getElementById('tax').textContent = `TZS ${tax.toFixed(2)}`;
+    document.getElementById('total').textContent = `TZS ${total.toFixed(2)}`;
 }
 
 // Initialize
@@ -420,6 +418,135 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('order_date').value = today;
+    
+    // Handle Create Order button
+    const createOrderBtn = document.getElementById('create-order-btn');
+    if (createOrderBtn) {
+        createOrderBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleFormSubmission('create');
+        });
+    }
+    
+    // Handle Save as Draft button
+    const saveDraftBtn = document.getElementById('save-draft-btn');
+    if (saveDraftBtn) {
+        saveDraftBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleFormSubmission('draft');
+        });
+    }
+    
+    // Form submission handler
+    function handleFormSubmission(action) {
+        // Validate that at least one item is added
+        const items = document.querySelectorAll('.order-item-row');
+        if (items.length === 0) {
+            SweetAlertUtils.showError('Validation Error', 'Please add at least one item to the purchase order.');
+            return;
+        }
+        
+        // Validate items
+        let validItems = true;
+        const orderItems = [];
+        
+        items.forEach((row, index) => {
+            const productSelect = row.querySelector('.product-select');
+            const quantityInput = row.querySelector('input[type="number"]:nth-of-type(1)');
+            const priceInput = row.querySelector('input[type="number"]:nth-of-type(2)');
+            const descriptionInput = row.querySelector('input[type="text"]');
+            
+            // For draft, only require product selection
+            if (!productSelect.value) {
+                validItems = false;
+                return;
+            }
+            
+            // For create order, require all fields
+            if (action === 'create' && (!quantityInput.value || !priceInput.value)) {
+                validItems = false;
+                return;
+            }
+            
+            orderItems.push({
+                product_id: productSelect.value,
+                quantity: quantityInput.value || 0,
+                unit_price: priceInput.value || 0,
+                description: descriptionInput.value || ''
+            });
+        });
+        
+        if (!validItems) {
+            const message = action === 'draft' 
+                ? 'Please select a product for each item.' 
+                : 'Please fill in all required fields for each item.';
+            SweetAlertUtils.showError('Validation Error', message);
+            return;
+        }
+        
+        // Show loading
+        const loadingMessage = action === 'draft' ? 'Saving Draft...' : 'Creating Purchase Order...';
+        SweetAlertUtils.loading(loadingMessage);
+        
+        // Create form data
+        const form = document.querySelector('form[action="{{ route('purchases.store') }}"]');
+        const formData = new FormData(form);
+        formData.append('items', JSON.stringify(orderItems));
+        formData.append('action', action);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successMessage = action === 'draft' 
+                    ? 'Purchase Order Draft Saved'
+                    : 'Purchase Order Created';
+                SweetAlertUtils.formSuccess(
+                    successMessage,
+                    data.message,
+                    data.redirect_url
+                );
+            } else {
+                const errorTitle = action === 'draft' 
+                    ? 'Save Draft Error'
+                    : 'Create Order Error';
+                SweetAlertUtils.createError(errorTitle, data.message || 'Unknown error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            SweetAlertUtils.networkError();
+        });
+    }
+    
+    // Handle product selection auto-fill
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('product-select')) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const price = selectedOption.getAttribute('data-price');
+            const name = selectedOption.getAttribute('data-name');
+            const row = e.target.closest('tr');
+            const priceInput = row.querySelector('input[type="number"]:nth-of-type(2)');
+            const descriptionInput = row.querySelector('input[type="text"]');
+            
+            if (price && priceInput) {
+                priceInput.value = price;
+                // Trigger input event to recalculate total
+                priceInput.dispatchEvent(new Event('input'));
+            }
+            
+            if (name && descriptionInput) {
+                descriptionInput.value = name;
+            }
+        }
+    });
 });
 </script>
 @endsection

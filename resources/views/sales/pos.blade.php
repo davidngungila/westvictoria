@@ -196,7 +196,7 @@
                         @if($product->quantity > 0)
                             <div class="product-card border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer" 
                                  onclick="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }}, '{{ $product->sku }}', {{ $product->quantity }})"
-                                 data-category="{{ $product->category ? $product->category->name : 'No Category' }}"
+                                 data-category="{{ is_object($product->category) ? $product->category->name : ($product->category ?? 'No Category') }}"
                                  data-name="{{ $product->name }}"
                                  data-sku="{{ $product->sku }}">
                                 <div class="flex items-center justify-between mb-2">

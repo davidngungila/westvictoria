@@ -141,7 +141,7 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0456</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TechPro Supplies</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,450.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 3,450.00</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                         Received
@@ -155,7 +155,7 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0455</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Global Materials Ltd</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$8,750.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 8,750.00</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                         In Transit
@@ -169,7 +169,7 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#PO-2024-0454</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Office Depot Pro</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,280.00</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS 1,280.00</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                         Ordered
@@ -259,7 +259,7 @@
                                     <p class="text-xs text-gray-500">12 orders</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">$45,230</span>
+                            <span class="text-sm font-bold text-gray-900">TZS 45,230</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -274,7 +274,7 @@
                                     <p class="text-xs text-gray-500">8 orders</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">$32,100</span>
+                            <span class="text-sm font-bold text-gray-900">TZS 32,100</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -289,7 +289,7 @@
                                     <p class="text-xs text-gray-500">15 orders</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-bold text-gray-900">$28,450</span>
+                            <span class="text-sm font-bold text-gray-900">TZS 28,450</span>
                         </div>
                     </div>
                 </div>

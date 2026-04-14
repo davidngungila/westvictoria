@@ -77,11 +77,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <a href="{{ route('categories.show', $category) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
                                 <a href="{{ route('categories.edit', $category) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                                <form action="{{ route('categories.destroy', $category) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this category?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                </form>
+                                <button type="button" onclick="deleteCategory({{ $category->id }}, '{{ $category->name }}')" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
                     @empty
@@ -103,4 +99,42 @@
         @endif
     </div>
 </div>
+
+<script>
+// Handle delete operations with SweetAlert
+function deleteCategory(categoryId, categoryName) {
+    SweetAlertUtils.confirmDelete(
+        'Delete Category?',
+        `Are you sure you want to delete "${categoryName}"? This action cannot be undone!`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            SweetAlertUtils.loading('Deleting Category...');
+            
+            fetch(`/categories/${categoryId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'DELETE'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SweetAlertUtils.deleteSuccess('Category').then(() => {
+                        window.location.href = data.redirect_url;
+                    });
+                } else {
+                    SweetAlertUtils.deleteError('Category', data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                SweetAlertUtils.networkError();
+            });
+        }
+    });
+}
+</script>
+
 @endsection

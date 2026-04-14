@@ -105,10 +105,29 @@ class ProductController extends Controller
 
             $product = Product::create($validated);
 
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product "' . $product->name . '" created successfully with SKU: ' . $product->sku,
+                    'product' => $product,
+                    'redirect_url' => route('products.index')
+                ]);
+            }
+
             return redirect()->route('products.index')
                 ->with('success', 'Product "' . $product->name . '" created successfully with SKU: ' . $product->sku);
 
         } catch (\Exception $e) {
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create product. Please try again.',
+                    'error' => $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->with('error', 'Failed to create product. Please try again.')
                 ->withInput();
@@ -183,10 +202,29 @@ class ProductController extends Controller
 
             $product->update($validated);
 
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product "' . $product->name . '" updated successfully.',
+                    'product' => $product,
+                    'redirect_url' => route('products.index')
+                ]);
+            }
+
             return redirect()->route('products.index')
                 ->with('success', 'Product "' . $product->name . '" updated successfully.');
 
         } catch (\Exception $e) {
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update product. Please try again.',
+                    'error' => $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->with('error', 'Failed to update product. Please try again.')
                 ->withInput();
@@ -207,10 +245,28 @@ class ProductController extends Controller
             $productName = $product->name;
             $product->delete();
 
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product "' . $productName . '" deleted successfully.',
+                    'redirect_url' => route('products.index')
+                ]);
+            }
+
             return redirect()->route('products.index')
                 ->with('success', 'Product "' . $productName . '" deleted successfully.');
 
         } catch (\Exception $e) {
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete product. Please try again.',
+                    'error' => $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->with('error', 'Failed to delete product. Please try again.');
         }

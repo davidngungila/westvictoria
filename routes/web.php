@@ -12,6 +12,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\PurchaseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -195,17 +196,35 @@ Route::get('/purchases/dashboard', function () {
     ));
 })->name('purchases.dashboard');
 
-Route::get('/purchases/orders', function () {
-    return view('purchases.orders');
-})->name('purchases.orders');
+Route::get('/purchases/orders', [PurchaseController::class, 'index'])->name('purchases.orders');
 
-Route::get('/purchases/create', function () {
-    return view('purchases.create');
-})->name('purchases.create');
+Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
 
-Route::get('/purchases/suppliers', function () {
-    return view('purchases.suppliers');
-})->name('purchases.suppliers');
+Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+
+Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+
+Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+
+Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+
+Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
+
+Route::post('/purchases/{purchase}/status', [PurchaseController::class, 'updateStatus'])->name('purchases.updateStatus');
+
+Route::get('/purchases/{purchase}/invoice', [PurchaseController::class, 'generateInvoice'])->name('purchases.invoice');
+
+Route::get('/purchases/{purchase}/invoice/view', [PurchaseController::class, 'viewInvoice'])->name('purchases.invoice.view');
+
+Route::get('/purchases/{purchase}/track', [PurchaseController::class, 'trackPurchase'])->name('purchases.track');
+
+Route::post('/purchases/{purchase}/cancel', [PurchaseController::class, 'cancelPurchase'])->name('purchases.cancel');
+
+Route::post('/purchases/{purchase}/approve', [PurchaseController::class, 'approvePurchase'])->name('purchases.approve');
+
+Route::post('/purchases/{purchase}/reject', [PurchaseController::class, 'rejectPurchase'])->name('purchases.reject');
+
+Route::get('/purchases/suppliers', [SupplierController::class, 'index'])->name('purchases.suppliers');
 
 // Inventory Routes
 Route::get('/inventory/dashboard', function () {

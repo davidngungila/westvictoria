@@ -56,6 +56,16 @@ class BrandController extends Controller
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand "' . $brand->name . '" created successfully.',
+                'brand' => $brand,
+                'redirect_url' => route('brands.index')
+            ]);
+        }
+
         return redirect()->route('brands.index')
             ->with('success', 'Brand "' . $brand->name . '" created successfully.');
     }
@@ -99,6 +109,16 @@ class BrandController extends Controller
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand "' . $brand->name . '" updated successfully.',
+                'brand' => $brand,
+                'redirect_url' => route('brands.index')
+            ]);
+        }
+
         return redirect()->route('brands.index')
             ->with('success', 'Brand "' . $brand->name . '" updated successfully.');
     }
@@ -106,16 +126,35 @@ class BrandController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Brand $brand)
+    public function destroy(Request $request, Brand $brand)
     {
         // Check if brand has products
         if ($brand->products()->exists()) {
+            $errorMessage = 'Cannot delete brand "' . $brand->name . '" because it has associated products.';
+            
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+
             return redirect()->route('brands.index')
-                ->with('error', 'Cannot delete brand "' . $brand->name . '" because it has associated products.');
+                ->with('error', $errorMessage);
         }
 
         $brandName = $brand->name;
         $brand->delete();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Brand "' . $brandName . '" deleted successfully.',
+                'redirect_url' => route('brands.index')
+            ]);
+        }
 
         return redirect()->route('brands.index')
             ->with('success', 'Brand "' . $brandName . '" deleted successfully.');

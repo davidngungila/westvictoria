@@ -12,12 +12,12 @@
                 <p class="text-gray-600 mt-1">Manage your supplier relationships and contacts</p>
             </div>
             <div class="flex space-x-3 mt-4 lg:mt-0">
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                <a href="{{ route('suppliers.create') }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Add Supplier
-                </button>
+                </a>
                 <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -34,8 +34,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Suppliers</p>
-                    <p class="text-2xl font-bold text-gray-900">28</p>
-                    <p class="text-xs text-green-600">+2 this month</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $suppliers->total() }}</p>
+                    <p class="text-xs text-green-600">{{ $suppliers->whereMonth('created_at', now()->month)->count() }} this month</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,8 +49,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Active Suppliers</p>
-                    <p class="text-2xl font-bold text-gray-900">24</p>
-                    <p class="text-xs text-green-600">85.7% active</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $suppliers->where('status', 'active')->count() }}</p>
+                    <p class="text-xs text-green-600">Ready for orders</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,13 +63,13 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Top Performers</p>
-                    <p class="text-2xl font-bold text-gray-900">8</p>
-                    <p class="text-xs text-blue-600">Excellent rating</p>
+                    <p class="text-sm font-medium text-gray-600">Total Purchases</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS {{ number_format($suppliers->sum('total_purchases'), 0) }}</p>
+                    <p class="text-xs text-green-600">All time total</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
             </div>
@@ -78,13 +78,13 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Pending Contracts</p>
-                    <p class="text-2xl font-bold text-gray-900">3</p>
-                    <p class="text-xs text-orange-600">Requires review</p>
+                    <p class="text-sm font-medium text-gray-600">Avg Order Value</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS {{ number_format($suppliers->avg('total_purchases'), 0) }}</p>
+                    <p class="text-xs text-blue-600">Per supplier</p>
                 </div>
-                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
             </div>

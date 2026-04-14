@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Today's Retail</p>
-                    <p class="text-2xl font-bold text-gray-900">$5,230</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS 5,230</p>
                     <p class="text-xs text-green-600">+15% from yesterday</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -64,7 +64,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Avg. Sale Value</p>
-                    <p class="text-2xl font-bold text-gray-900">$58.80</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS 58.80</p>
                     <p class="text-xs text-orange-600">-3% from yesterday</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">

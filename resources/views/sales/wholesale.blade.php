@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Today's Wholesale</p>
-                    <p class="text-2xl font-bold text-gray-900">$7,220</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS 7,220</p>
                     <p class="text-xs text-green-600">+22% from yesterday</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -64,7 +64,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Avg. Order Value</p>
-                    <p class="text-2xl font-bold text-gray-900">$1,245</p>
+                    <p class="text-2xl font-bold text-gray-900">TZS 1,245</p>
                     <p class="text-xs text-green-600">+8% from last month</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -195,7 +195,7 @@
                             45 items
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            $12,450.00
+                            TZS 12,450.00
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                             15%
@@ -248,7 +248,7 @@
                             120 items
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            $8,750.00
+                            TZS 8,750.00
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                             20%
@@ -301,7 +301,7 @@
                             67 items
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            $15,320.00
+                            TZS 15,320.00
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                             10%
@@ -354,7 +354,7 @@
                             23 items
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            $4,890.00
+                            TZS 4,890.00
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                             12%

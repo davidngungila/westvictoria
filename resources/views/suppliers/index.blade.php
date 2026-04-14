@@ -80,11 +80,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <a href="{{ route('suppliers.show', $supplier) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
                                 <a href="{{ route('suppliers.edit', $supplier) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                                <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this supplier?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                </form>
+                                <button type="button" onclick="deleteSupplier({{ $supplier->id }}, '{{ $supplier->supplier_id }}')" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
                     @empty
@@ -106,4 +102,42 @@
         @endif
     </div>
 </div>
+
+<script>
+// Handle delete operations with SweetAlert
+function deleteSupplier(supplierId, supplierIdCode) {
+    SweetAlertUtils.confirmDelete(
+        'Delete Supplier?',
+        `Are you sure you want to delete "${supplierIdCode}"? This action cannot be undone!`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            SweetAlertUtils.loading('Deleting Supplier...');
+            
+            fetch(`/suppliers/${supplierId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'DELETE'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SweetAlertUtils.deleteSuccess('Supplier').then(() => {
+                        window.location.href = data.redirect_url;
+                    });
+                } else {
+                    SweetAlertUtils.deleteError('Supplier', data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                SweetAlertUtils.networkError();
+            });
+        }
+    });
+}
+</script>
+
 @endsection

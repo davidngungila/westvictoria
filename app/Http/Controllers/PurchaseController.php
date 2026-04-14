@@ -84,7 +84,14 @@ class PurchaseController extends Controller
             ->orderBy('order_date', 'desc')
             ->paginate(20);
 
-        return view('purchases.index', compact('purchases'));
+        // Get additional statistics for the view
+        $monthlyOrders = Purchase::whereMonth('order_date', now()->month)->count();
+        $monthlyAmount = Purchase::whereMonth('order_date', now()->month)->sum('final_amount');
+        $pendingOrders = Purchase::whereIn('status', ['ordered', 'in_transit'])->count();
+        $completedOrders = Purchase::where('status', 'received')->count();
+        $totalAmount = Purchase::sum('final_amount');
+
+        return view('purchases.orders', compact('purchases', 'monthlyOrders', 'monthlyAmount', 'pendingOrders', 'completedOrders', 'totalAmount'));
     }
 
     /**
@@ -92,10 +99,17 @@ class PurchaseController extends Controller
      */
     public function create()
     {
+        // Get active suppliers
         $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
+        
+        // Get active products
         $products = Product::where('status', 'active')->orderBy('name')->get();
+        
+        // Generate next PO number
+        $lastPurchase = Purchase::orderBy('created_at', 'desc')->first();
+        $nextPoNumber = $lastPurchase ? 'PO-' . date('Y') . '-' . str_pad(substr($lastPurchase->purchase_number, -4) + 1, 4, '0', STR_PAD_LEFT) : 'PO-' . date('Y') . '-0001';
 
-        return view('purchases.create', compact('suppliers', 'products'));
+        return view('purchases.create', compact('suppliers', 'products', 'nextPoNumber'));
     }
 
     /**
@@ -103,35 +117,48 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'expected_date' => 'nullable|date|after:today',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $action = $request->input('action', 'create');
+        
+        // Validation rules differ for draft vs create
+        if ($action === 'draft') {
+            $request->validate([
+                'supplier_id' => 'required|exists:suppliers,id',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|exists:products,id',
+                'order_date' => 'required|date',
+                'notes' => 'nullable|string',
+            ]);
+        } else {
+            $request->validate([
+                'supplier_id' => 'required|exists:suppliers,id',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|exists:products,id',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.unit_price' => 'required|numeric|min:0',
+                'order_date' => 'required|date',
+                'expected_date' => 'nullable|date|after_or_equal:order_date',
+                'notes' => 'nullable|string',
+            ]);
+        }
 
         DB::beginTransaction();
         try {
-            // Calculate totals
-            $totalAmount = 0;
-            foreach ($request->items as $item) {
-                $totalAmount += $item['quantity'] * $item['unit_price'];
-            }
+            // Calculate total amount
+            $totalAmount = collect($request->items)->sum(function($item) {
+                return ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
+            });
 
-            // Create purchase
+            // Create purchase with appropriate status
+            $status = $action === 'draft' ? 'draft' : 'ordered';
+            
             $purchase = Purchase::create([
                 'purchase_number' => 'PO-' . date('Y') . '-' . str_pad(Purchase::count() + 1, 4, '0', STR_PAD_LEFT),
                 'supplier_id' => $request->supplier_id,
-                'total_amount' => $totalAmount,
-                'tax_amount' => 0, // Calculate tax if needed
-                'discount_amount' => 0, // Calculate discount if needed
-                'final_amount' => $totalAmount,
-                'status' => 'ordered',
-                'order_date' => now(),
+                'order_date' => $request->order_date,
                 'expected_date' => $request->expected_date,
+                'status' => $status,
+                'total_amount' => $totalAmount,
+                'final_amount' => $totalAmount,
                 'notes' => $request->notes,
                 'created_by' => Auth::id(),
             ]);
@@ -141,22 +168,30 @@ class PurchaseController extends Controller
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'total_price' => $item['quantity'] * $item['unit_price'],
-                    'received_quantity' => 0,
-                    'notes' => $item['notes'] ?? null,
+                    'quantity' => $item['quantity'] ?? 0,
+                    'unit_price' => $item['unit_price'] ?? 0,
+                    'total_price' => ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0),
+                    'description' => $item['description'] ?? '',
                 ]);
             }
 
             DB::commit();
-            return redirect()->route('purchases.dashboard')
-                ->with('success', 'Purchase order created successfully!');
+            
+            $message = $action === 'draft' 
+                ? 'Purchase order draft saved successfully.' 
+                : 'Purchase order created successfully.';
+                
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'redirect_url' => route('purchases.orders')
+            ]);
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()
-                ->with('error', 'Failed to create purchase order. Please try again.')
-                ->withInput();
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error ' . ($action === 'draft' ? 'saving draft' : 'creating purchase order') . ': ' . $e->getMessage()
+            ], 422);
         }
     }
 
@@ -175,7 +210,7 @@ class PurchaseController extends Controller
     public function edit(Purchase $purchase)
     {
         if ($purchase->status !== 'ordered') {
-            return back()->with('error', 'Only ordered purchases can be edited.');
+            return back()->with('error', 'Cannot edit purchase order that is already processed.');
         }
 
         $purchase->load(['supplier', 'purchaseItems.product']);
@@ -191,7 +226,13 @@ class PurchaseController extends Controller
     public function update(Request $request, Purchase $purchase)
     {
         if ($purchase->status !== 'ordered') {
-            return back()->with('error', 'Only ordered purchases can be edited.');
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot update purchase order that is already processed.'
+                ], 422);
+            }
+            return back()->with('error', 'Cannot update purchase order that is already processed.');
         }
 
         $request->validate([
@@ -200,32 +241,30 @@ class PurchaseController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
-            'expected_date' => 'nullable|date|after:today',
-            'notes' => 'nullable|string|max:1000',
+            'order_date' => 'required|date',
+            'expected_date' => 'nullable|date|after_or_equal:order_date',
+            'notes' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
-            // Delete existing items
-            $purchase->purchaseItems()->delete();
-
-            // Calculate totals
-            $totalAmount = 0;
-            foreach ($request->items as $item) {
-                $totalAmount += $item['quantity'] * $item['unit_price'];
-            }
+            // Calculate total amount
+            $totalAmount = collect($request->items)->sum(function($item) {
+                return $item['quantity'] * $item['unit_price'];
+            });
 
             // Update purchase
             $purchase->update([
                 'supplier_id' => $request->supplier_id,
+                'order_date' => $request->order_date,
+                'expected_date' => $request->expected_date,
                 'total_amount' => $totalAmount,
                 'final_amount' => $totalAmount,
-                'expected_date' => $request->expected_date,
                 'notes' => $request->notes,
-                'updated_by' => Auth::id(),
             ]);
 
-            // Create new purchase items
+            // Delete old items and create new ones
+            $purchase->purchaseItems()->delete();
             foreach ($request->items as $item) {
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
@@ -233,29 +272,48 @@ class PurchaseController extends Controller
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['quantity'] * $item['unit_price'],
-                    'received_quantity' => 0,
-                    'notes' => $item['notes'] ?? null,
+                    'description' => $item['description'] ?? '',
                 ]);
             }
 
             DB::commit();
-            return redirect()->route('purchases.dashboard')
-                ->with('success', 'Purchase order updated successfully!');
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase order updated successfully.',
+                    'redirect_url' => route('purchases.show', $purchase->id)
+                ]);
+            }
+            
+            return redirect()->route('purchases.show', $purchase->id)->with('success', 'Purchase order updated successfully.');
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()
-                ->with('error', 'Failed to update purchase order. Please try again.')
-                ->withInput();
+            DB::rollBack();
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating purchase order: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->withInput()->with('error', 'Error updating purchase order: ' . $e->getMessage());
         }
     }
 
     /**
      * Remove the specified purchase from storage.
      */
-    public function destroy(Purchase $purchase)
+    public function destroy(Request $request, Purchase $purchase)
     {
-        if ($purchase->status !== 'ordered') {
-            return back()->with('error', 'Only ordered purchases can be deleted.');
+        if ($purchase->status !== 'ordered' && $purchase->status !== 'draft') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete purchase order that is already processed.'
+                ], 422);
+            }
+            return back()->with('error', 'Cannot delete purchase order that is already processed.');
         }
 
         DB::beginTransaction();
@@ -263,11 +321,27 @@ class PurchaseController extends Controller
             $purchase->purchaseItems()->delete();
             $purchase->delete();
             DB::commit();
-            return redirect()->route('purchases.dashboard')
-                ->with('success', 'Purchase order deleted successfully!');
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase order deleted successfully.',
+                    'redirect_url' => route('purchases.orders')
+                ]);
+            }
+            
+            return redirect()->route('purchases.orders')->with('success', 'Purchase order deleted successfully.');
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Failed to delete purchase order. Please try again.');
+            DB::rollBack();
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error deleting purchase order: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error deleting purchase order: ' . $e->getMessage());
         }
     }
 
@@ -278,15 +352,238 @@ class PurchaseController extends Controller
     {
         $request->validate([
             'status' => 'required|in:ordered,in_transit,received,cancelled',
-            'received_date' => 'nullable|required_if:status,received|date',
         ]);
 
-        $purchase->update([
-            'status' => $request->status,
-            'received_date' => $request->received_date,
-            'updated_by' => Auth::id(),
-        ]);
+        try {
+            $purchase->update(['status' => $request->status]);
+            
+            // If status is received, update stock
+            if ($request->status === 'received') {
+                foreach ($purchase->purchaseItems as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $product->increment('quantity', $item->quantity);
+                    }
+                }
+            }
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase status updated successfully.',
+                    'redirect_url' => route('purchases.show', $purchase->id)
+                ]);
+            }
+            
+            return back()->with('success', 'Purchase status updated successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating purchase status: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error updating purchase status: ' . $e->getMessage());
+        }
+    }
 
-        return back()->with('success', 'Purchase status updated successfully!');
+    /**
+     * Generate invoice for purchase.
+     */
+    public function generateInvoice(Request $request, Purchase $purchase)
+    {
+        try {
+            // Load purchase with relationships for invoice
+            $purchase->load(['supplier', 'purchaseItems.product']);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice generated successfully.',
+                    'redirect_url' => route('purchases.invoice.view', $purchase->id)
+                ]);
+            }
+            
+            return view('purchases.invoice', compact('purchase'));
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error generating invoice: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error generating invoice: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * View invoice for purchase.
+     */
+    public function viewInvoice(Request $request, Purchase $purchase)
+    {
+        try {
+            // Load purchase with relationships for invoice
+            $purchase->load(['supplier', 'purchaseItems.product']);
+            
+            return view('purchases.invoice', compact('purchase'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading invoice: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Track purchase order.
+     */
+    public function trackPurchase(Request $request, Purchase $purchase)
+    {
+        try {
+            // Generate tracking information (in a real app, this would integrate with shipping APIs)
+            $trackingInfo = [
+                'tracking_number' => 'TRK-' . strtoupper(substr(md5($purchase->id), 0, 8)),
+                'status' => ucfirst($purchase->status),
+                'estimated_delivery' => $purchase->expected_date ? $purchase->expected_date->format('M d, Y') : 'Not specified',
+                'last_updated' => $purchase->updated_at->format('M d, Y H:i'),
+                'current_location' => $purchase->status === 'received' ? 'Delivered' : 'In Transit',
+                'carrier' => 'Express Shipping Co.'
+            ];
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tracking information retrieved successfully.',
+                    'tracking_info' => $trackingInfo
+                ]);
+            }
+            
+            return back()->with('success', 'Tracking information retrieved successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error retrieving tracking information: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error retrieving tracking information: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel purchase order.
+     */
+    public function cancelPurchase(Request $request, Purchase $purchase)
+    {
+        if (!in_array($purchase->status, ['ordered', 'draft'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot cancel purchase order that is already processed.'
+                ], 422);
+            }
+            return back()->with('error', 'Cannot cancel purchase order that is already processed.');
+        }
+
+        try {
+            $purchase->update(['status' => 'cancelled']);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase order cancelled successfully.',
+                    'redirect_url' => route('purchases.orders')
+                ]);
+            }
+            
+            return redirect()->route('purchases.orders')->with('success', 'Purchase order cancelled successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error cancelling purchase order: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error cancelling purchase order: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve purchase order.
+     */
+    public function approvePurchase(Request $request, Purchase $purchase)
+    {
+        if ($purchase->status !== 'draft') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only draft purchase orders can be approved.'
+                ], 422);
+            }
+            return back()->with('error', 'Only draft purchase orders can be approved.');
+        }
+
+        try {
+            $purchase->update(['status' => 'ordered']);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase order approved successfully.',
+                    'redirect_url' => route('purchases.orders')
+                ]);
+            }
+            
+            return redirect()->route('purchases.orders')->with('success', 'Purchase order approved successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error approving purchase order: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error approving purchase order: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject purchase order.
+     */
+    public function rejectPurchase(Request $request, Purchase $purchase)
+    {
+        if ($purchase->status !== 'draft') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only draft purchase orders can be rejected.'
+                ], 422);
+            }
+            return back()->with('error', 'Only draft purchase orders can be rejected.');
+        }
+
+        try {
+            $purchase->update(['status' => 'cancelled']);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Purchase order rejected successfully.',
+                    'redirect_url' => route('purchases.orders')
+                ]);
+            }
+            
+            return redirect()->route('purchases.orders')->with('success', 'Purchase order rejected successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error rejecting purchase order: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return back()->with('error', 'Error rejecting purchase order: ' . $e->getMessage());
+        }
     }
 }

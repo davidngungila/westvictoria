@@ -59,6 +59,16 @@ class CustomerController extends Controller
             'status' => $request->status,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer "' . $customer->customer_id . '" created successfully.',
+                'customer' => $customer,
+                'redirect_url' => route('customers.index')
+            ]);
+        }
+
         return redirect()->route('customers.index')
             ->with('success', 'Customer "' . $customer->customer_id . '" created successfully.');
     }
@@ -103,6 +113,16 @@ class CustomerController extends Controller
             'status' => $request->status,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer "' . $customer->customer_id . '" updated successfully.',
+                'customer' => $customer,
+                'redirect_url' => route('customers.index')
+            ]);
+        }
+
         return redirect()->route('customers.index')
             ->with('success', 'Customer "' . $customer->customer_id . '" updated successfully.');
     }
@@ -110,10 +130,19 @@ class CustomerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Customer $customer)
+    public function destroy(Request $request, Customer $customer)
     {
         $customerName = $customer->customer_id;
         $customer->delete();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer "' . $customerName . '" deleted successfully.',
+                'redirect_url' => route('customers.index')
+            ]);
+        }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer "' . $customerName . '" deleted successfully.');

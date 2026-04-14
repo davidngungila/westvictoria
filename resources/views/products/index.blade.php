@@ -399,5 +399,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 });
+
+// Handle delete operations with SweetAlert
+function deleteProduct(productId, productName) {
+    SweetAlertUtils.confirmDelete(
+        'Delete Product?',
+        `Are you sure you want to delete "${productName}"? This action cannot be undone!`
+    ).then((result) => {
+        if (result.isConfirmed) {
+            SweetAlertUtils.loading('Deleting Product...');
+            
+            fetch(`/products/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'DELETE'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SweetAlertUtils.deleteSuccess('Product').then(() => {
+                        window.location.href = data.redirect_url;
+                    });
+                } else {
+                    SweetAlertUtils.deleteError('Product', data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                SweetAlertUtils.networkError();
+            });
+        }
+    });
+}
+
+// Update delete buttons to use SweetAlert
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('button[onclick*="deleteProduct"]');
+    deleteButtons.forEach(button => {
+        const onclick = button.getAttribute('onclick');
+        const matches = onclick.match(/deleteProduct\((\d+),\s*['"]([^'"]+)['"]\)/);
+        if (matches) {
+            const productId = matches[1];
+            const productName = matches[2];
+            button.removeAttribute('onclick');
+            button.addEventListener('click', () => deleteProduct(productId, productName));
+        }
+    });
+});
 </script>
 @endsection

@@ -333,4 +333,48 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="{{ route('products.update', $product) }}"]');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            SweetAlertUtils.loading('Updating Product...');
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'PUT'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SweetAlertUtils.formSuccess(
+                        'Product Updated',
+                        data.message,
+                        data.redirect_url
+                    );
+                } else {
+                    SweetAlertUtils.updateError('Product', data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                SweetAlertUtils.networkError();
+            });
+        });
+    }
+});
+</script>
+
 @endsection

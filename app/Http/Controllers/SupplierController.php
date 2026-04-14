@@ -61,6 +61,16 @@ class SupplierController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier "' . $supplier->supplier_id . '" created successfully.',
+                'supplier' => $supplier,
+                'redirect_url' => route('suppliers.index')
+            ]);
+        }
+
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier "' . $supplier->supplier_id . '" created successfully.');
     }
@@ -107,6 +117,16 @@ class SupplierController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier "' . $supplier->supplier_id . '" updated successfully.',
+                'supplier' => $supplier,
+                'redirect_url' => route('suppliers.index')
+            ]);
+        }
+
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier "' . $supplier->supplier_id . '" updated successfully.');
     }
@@ -114,10 +134,19 @@ class SupplierController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Supplier $supplier)
+    public function destroy(Request $request, Supplier $supplier)
     {
         $supplierName = $supplier->supplier_id;
         $supplier->delete();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier "' . $supplierName . '" deleted successfully.',
+                'redirect_url' => route('suppliers.index')
+            ]);
+        }
 
         return redirect()->route('suppliers.index')
             ->with('success', 'Supplier "' . $supplierName . '" deleted successfully.');

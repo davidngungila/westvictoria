@@ -547,6 +547,9 @@
         });
     </script>
 
+    <!-- SweetAlert Utilities -->
+    <script src="{{ asset('js/sweetalert-utils.js') }}"></script>
+
     <!-- Toast Notifications -->
     @include('components.toast')
 

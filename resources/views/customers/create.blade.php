@@ -136,4 +136,47 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="{{ route('customers.store') }}"]');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            SweetAlertUtils.loading('Creating Customer...');
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    SweetAlertUtils.formSuccess(
+                        'Customer Created',
+                        data.message,
+                        data.redirect_url
+                    );
+                } else {
+                    SweetAlertUtils.createError('Customer', data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                SweetAlertUtils.networkError();
+            });
+        });
+    }
+});
+</script>
+
 @endsection

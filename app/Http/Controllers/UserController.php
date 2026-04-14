@@ -101,7 +101,17 @@ class UserController extends Controller
             // Column doesn't exist, skip it
         }
         
-        User::create($validated);
+        $user = User::create($validated);
+        
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully.',
+                'user' => $user,
+                'redirect_url' => route('users.management')
+            ]);
+        }
         
         return redirect()->route('users.management')
             ->with('success', 'User created successfully.');
@@ -142,6 +152,16 @@ class UserController extends Controller
 
         $user->update($validated);
         
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully.',
+                'user' => $user,
+                'redirect_url' => route('users.management')
+            ]);
+        }
+        
         return redirect()->route('users.management')
             ->with('success', 'User updated successfully.');
     }
@@ -149,13 +169,32 @@ class UserController extends Controller
     /**
      * Remove the specified user from storage.
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
         if ($user->id === Auth::id()) {
-            return back()->with('error', 'You cannot delete your own account.');
+            $errorMessage = 'You cannot delete your own account.';
+            
+            // Check if request is AJAX
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+            
+            return back()->with('error', $errorMessage);
         }
         
         $user->delete();
+        
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully.',
+                'redirect_url' => route('users.management')
+            ]);
+        }
         
         return redirect()->route('users.management')
             ->with('success', 'User deleted successfully.');
