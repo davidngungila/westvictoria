@@ -12,7 +12,7 @@
                 <p class="text-gray-600 mt-1">Overview of your sales performance and analytics</p>
             </div>
             <div class="flex space-x-3 mt-4 lg:mt-0">
-                <a href="{{ route('sales.pos') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -97,14 +97,11 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-800">Recent Sales</h3>
                 <div class="flex space-x-2">
-                    <a href="{{ route('sales.pos') }}" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
-                        New Sale (POS)
+                    <a href="{{ route('sales.retail') }}" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                        Retail Sales
                     </a>
-                    <a href="{{ route('sales.pricing') }}" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm">
-                        Pricing
-                    </a>
-                    <a href="{{ route('sales.reports') }}" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm">
-                        Reports
+                    <a href="{{ route('sales.wholesale') }}" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm">
+                        Wholesale Sales
                     </a>
                 </div>
             </div>
@@ -153,16 +150,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('sales.show', $sale) }}" class="text-blue-600 hover:text-blue-900">View</a>
-                                    @if($sale->sale_status !== 'completed' && $sale->sale_status !== 'cancelled')
-                                        <span class="text-gray-300">|</span>
-                                        <a href="{{ route('sales.edit', $sale) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                    @endif
                                     <span class="text-gray-300">|</span>
-                                    @if($sale->payment_status === 'paid')
-                                        <button onclick="generateReceipt({{ $sale->id }})" class="text-green-600 hover:text-green-900">Receipt</button>
-                                    @else
-                                        <button onclick="generateInvoice({{ $sale->id }})" class="text-purple-600 hover:text-purple-900">Invoice</button>
-                                    @endif
+                                    <a href="{{ route('sales.edit', $sale) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                 </td>
                             </tr>
                         @endforeach
@@ -174,7 +163,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                     </svg>
                                     <p class="text-gray-500 mb-2">No sales found</p>
-                                    <a href="{{ route('sales.pos') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                    <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                                         Create First Sale
                                     </a>
                                 </div>
@@ -183,194 +172,40 @@
                     @endif
                 </tbody>
             </table>
-        </div>
-        
-        <!-- Pagination -->
-        @if($sales->hasPages())
-            <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                <div class="flex-1 flex justify-between sm:hidden">
-                    {{ $sales->links() }}
-                </div>
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium">{{ $sales->firstItem() }}</span> to 
-                            <span class="font-medium">{{ $sales->lastItem() }}</span> of 
-                            <span class="font-medium">{{ $sales->total() }}</span> results
-                        </p>
-                    </div>
-                    <div>
-                        {{ $sales->links() }}
+                                    <p class="text-xs text-gray-500">120 units</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-bold text-gray-900">$3,599</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        @endif
+
+            <!-- Quick Stats -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Quick Stats</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Conversion Rate</span>
+                        <span class="text-sm font-bold text-green-600">3.2%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Cart Abandonment</span>
+                        <span class="text-sm font-bold text-orange-600">24.5%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Customer Return</span>
+                        <span class="text-sm font-bold text-blue-600">18.3%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Avg. Processing Time</span>
+                        <span class="text-sm font-bold text-gray-900">2.5 hrs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
-
-<script>
-// Generate invoice for specific sale
-function generateInvoice(saleId) {
-    Swal.fire({
-        title: 'Generating Invoice...',
-        text: 'Please wait while we generate the invoice',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-    
-    // Get CSRF token safely
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-    if (!csrfToken) {
-        Swal.close();
-        Swal.fire({
-            icon: 'error',
-            title: 'Configuration Error',
-            text: 'CSRF token not found. Please refresh the page.',
-            confirmButtonColor: '#EF4444'
-        });
-        return;
-    }
-    
-    fetch(`/sales/${saleId}/invoice`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-        }
-    })
-    .then(response => {
-        console.log('Invoice response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return response.json();
-    })
-    .then(data => {
-        console.log('Invoice response data:', data);
-        Swal.close();
-        
-        if (data.success) {
-            // Open invoice in new window
-            const invoiceWindow = window.open('', '_blank');
-            invoiceWindow.document.write(data.html);
-            invoiceWindow.document.close();
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to generate invoice',
-                confirmButtonColor: '#EF4444'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Invoice fetch error:', error);
-        Swal.close();
-        
-        // More specific error messages
-        let errorMessage = 'Failed to generate invoice';
-        
-        if (error.message.includes('HTTP error! status: 404')) {
-            errorMessage = 'Invoice endpoint not found. Please check the route.';
-        } else if (error.message.includes('HTTP error! status: 500')) {
-            errorMessage = 'Server error while generating invoice. Please try again.';
-        } else if (error.message.includes('Failed to fetch')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-        }
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: errorMessage,
-            confirmButtonColor: '#EF4444'
-        });
-    });
-}
-
-// Generate receipt for specific sale
-function generateReceipt(saleId) {
-    Swal.fire({
-        title: 'Generating Receipt...',
-        text: 'Please wait while we generate the receipt',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-    
-    // Get CSRF token safely
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-    if (!csrfToken) {
-        Swal.close();
-        Swal.fire({
-            icon: 'error',
-            title: 'Configuration Error',
-            text: 'CSRF token not found. Please refresh the page.',
-            confirmButtonColor: '#EF4444'
-        });
-        return;
-    }
-    
-    fetch(`/sales/${saleId}/receipt`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken.getAttribute('content')
-        }
-    })
-    .then(response => {
-        console.log('Receipt response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return response.json();
-    })
-    .then(data => {
-        console.log('Receipt response data:', data);
-        Swal.close();
-        
-        if (data.success) {
-            // Open receipt in new window
-            const receiptWindow = window.open('', '_blank');
-            receiptWindow.document.write(data.html);
-            receiptWindow.document.close();
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to generate receipt',
-                confirmButtonColor: '#EF4444'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Receipt fetch error:', error);
-        Swal.close();
-        
-        // More specific error messages
-        let errorMessage = 'Failed to generate receipt';
-        
-        if (error.message.includes('HTTP error! status: 404')) {
-            errorMessage = 'Receipt endpoint not found. Please check the route.';
-        } else if (error.message.includes('HTTP error! status: 500')) {
-            errorMessage = 'Server error while generating receipt. Please try again.';
-        } else if (error.message.includes('Failed to fetch')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-        }
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: errorMessage,
-            confirmButtonColor: '#EF4444'
-        });
-    });
-}
-</script>

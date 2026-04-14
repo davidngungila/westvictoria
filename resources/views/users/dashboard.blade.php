@@ -34,8 +34,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">48</p>
-                    <p class="text-xs text-green-600">+3 this month</p>
+                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">{{ $totalUsers }}</p>
+                    <p class="text-xs text-green-600">Registered</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,13 +44,12 @@
                 </div>
             </div>
         </div>
-
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Active Users</p>
-                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">42</p>
-                    <p class="text-xs text-green-600">87.5% active rate</p>
+                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">{{ $activeUsers }}</p>
+                    <p class="text-xs text-green-600">{{ $totalUsers > 0 ? round(($activeUsers / $totalUsers) * 100, 1) : 0 }}% active</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,12 +58,11 @@
                 </div>
             </div>
         </div>
-
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Admin Users</p>
-                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">8</p>
+                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">{{ $adminUsers }}</p>
                     <p class="text-xs text-blue-600">Full access</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -74,12 +72,11 @@
                 </div>
             </div>
         </div>
-
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Online Now</p>
-                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">12</p>
+                    <p class="text-2xl font-bold text-gray-900" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; font-weight: 700;">{{ $recentUsers->count() }}</p>
                     <p class="text-xs text-green-600">Currently active</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -122,7 +119,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;">Recent Users</h3>
-                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</button>
+                        <a href="{{ route('users.management') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -137,6 +134,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach ($recentUsers as $recentUser)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -146,84 +144,27 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-medium text-gray-900">John Smith</div>
-                                            <div class="text-xs text-gray-500">john.smith@company.com</div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $recentUser->name }}</div>
+                                            <div class="text-xs text-gray-500">{{ $recentUser->email }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                        Admin
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ ($recentUser->role ?? 'user') === 'admin' ? 'bg-purple-100 text-purple-800' : (($recentUser->role ?? 'user') === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                                        {{ ucfirst($recentUser->role ?? 'user') }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Active
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ ($recentUser->is_active ?? true) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                        {{ ($recentUser->is_active ?? true) ? 'Active' : 'Away' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 hours ago</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $recentUser->created_at->diffForHumans() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-blue-600 hover:text-blue-900">View</button>
+                                    <a href="{{ route('users.edit', $recentUser->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                            <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">Sarah Johnson</div>
-                                            <div class="text-xs text-gray-500">sarah.j@company.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Manager
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Active
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5 hours ago</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-blue-600 hover:text-blue-900">View</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                            <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">Mike Wilson</div>
-                                            <div class="text-xs text-gray-500">mike.w@company.com</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Staff
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        Away
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1 day ago</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-blue-600 hover:text-blue-900">View</button>
-                                </td>
-                            </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -242,42 +183,42 @@
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Admin</span>
-                                <span class="text-sm font-bold text-gray-900">8</span>
+                                <span class="text-sm font-bold text-gray-900">{{ $adminUsers }}</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-purple-600 h-2 rounded-full" style="width: 16.7%"></div>
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: {{ $totalUsers > 0 ? round(($adminUsers / $totalUsers) * 100, 1) : 0 }}%"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">16.7% of total users</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $totalUsers > 0 ? round(($adminUsers / $totalUsers) * 100, 1) : 0 }}% of total users</p>
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Manager</span>
-                                <span class="text-sm font-bold text-gray-900">12</span>
+                                <span class="text-sm font-bold text-gray-900">{{ $managerUsers }}</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full" style="width: 25%"></div>
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $totalUsers > 0 ? round(($managerUsers / $totalUsers) * 100, 1) : 0 }}%"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">25% of total users</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $totalUsers > 0 ? round(($managerUsers / $totalUsers) * 100, 1) : 0 }}% of total users</p>
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Staff</span>
-                                <span class="text-sm font-bold text-gray-900">22</span>
+                                <span class="text-sm font-bold text-gray-900">{{ $totalUsers - $adminUsers - $managerUsers }}</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-600 h-2 rounded-full" style="width: 45.8%"></div>
+                                <div class="bg-green-600 h-2 rounded-full" style="width: {{ $totalUsers > 0 ? round((($totalUsers - $adminUsers - $managerUsers) / $totalUsers) * 100, 1) : 0 }}%"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">45.8% of total users</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $totalUsers > 0 ? round((($totalUsers - $adminUsers - $managerUsers) / $totalUsers) * 100, 1) : 0 }}% of total users</p>
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Viewer</span>
-                                <span class="text-sm font-bold text-gray-900">6</span>
+                                <span class="text-sm font-bold text-gray-900">{{ $totalUsers - $adminUsers - $managerUsers - ($totalUsers - $adminUsers - $managerUsers - ($totalUsers - $adminUsers - $managerUsers)) }}</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-gray-600 h-2 rounded-full" style="width: 12.5%"></div>
+                                <div class="bg-gray-600 h-2 rounded-full" style="width: {{ $totalUsers > 0 ? round((($totalUsers - $adminUsers - $managerUsers - ($totalUsers - $adminUsers - $managerUsers)) / $totalUsers) * 100, 1) : 0 }}%"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">12.5% of total users</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $totalUsers > 0 ? round((($totalUsers - $adminUsers - $managerUsers - ($totalUsers - $adminUsers - $managerUsers)) / $totalUsers) * 100, 1) : 0 }}% of total users</p>
                         </div>
                     </div>
                 </div>
@@ -292,26 +233,23 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Today</span>
-                            <span class="text-sm font-bold text-green-600">28</span>
+                            <span class="text-sm font-bold text-green-600">{{ $todayLogins }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">This Week</span>
-                            <span class="text-sm font-bold text-gray-900">142</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $thisWeekLogins }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">This Month</span>
-                            <span class="text-sm font-bold text-gray-900">486</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $thisMonthLogins }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Failed Attempts</span>
-                            <span class="text-sm font-bold text-red-600">3</span>
+                            <span class="text-sm font-bold text-red-600">{{ $failedAttempts }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="p-6 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-800" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;">Quick Actions</h3>
                 </div>

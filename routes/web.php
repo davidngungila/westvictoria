@@ -1,6 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SupplierController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,40 +23,49 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Authentication Routes
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
-
-Route::post('/login', function () {
-    // Simple login logic for demonstration
-    $email = request('email');
-    $password = request('password');
-    
-    // For demo purposes, accept any email/password
-    // In production, implement proper authentication
-    if ($email && $password) {
-        return redirect('/dashboard');
-    }
-    
-    return back()->with('error', 'Invalid credentials');
-})->name('login.submit');
-
-Route::post('/logout', function () {
-    return redirect('/login');
-})->name('logout');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Password Reset Routes
-Route::get('/password/reset', function () {
-    return view('auth.forgot-password');
-})->name('password.request');
+Route::get('/password/reset', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/password/email', [AuthController::class, 'sendResetLink'])->name('password.email');
 
-Route::post('/password/email', function () {
-    $email = request('email');
+// Protected Routes (require authentication)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
     
-    // For demo purposes, just show success message
-    // In production, implement actual password reset email sending
-    return back()->with('status', 'Password reset link has been sent to your email.');
-})->name('password.email');
+    Route::get('/users/dashboard', [UserController::class, 'dashboard'])->name('users.dashboard');
+    Route::get('/users/management', [UserController::class, 'index'])->name('users.management');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::patch('/users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
+    
+    Route::get('/settings/dashboard', [SettingsController::class, 'dashboard'])->name('settings.dashboard');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::post('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences.update');
+    Route::post('/settings/system', [SettingsController::class, 'updateSystem'])->name('settings.system.update');
+    
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::post('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture.update');
+    Route::post('/profile/picture/remove', [ProfileController::class, 'removePicture'])->name('profile.picture.remove');
+    
+    Route::get('/billing', function () {
+        return view('billing.index');
+    })->name('billing.index');
+    
+    Route::get('/help', function () {
+        return view('help.index');
+    })->name('help.index');
+    
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
+});
 
 Route::get('/', function () {
     return redirect('/login');
@@ -58,38 +76,52 @@ Route::get('/dashboard', function () {
 })->name('dashboard');
 
 // Products Routes
-Route::get('/products', function () {
-    return view('products.index');
-})->name('products.index');
-
-Route::get('/products/create', function () {
-    return view('products.create');
-})->name('products.create');
-
-Route::get('/products/{id}', function ($id) {
-    return view('products.show');
-})->name('products.show');
-
-Route::get('/products/{id}/edit', function ($id) {
-    return view('products.edit');
-})->name('products.edit');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+Route::patch('/products/{product}/status', [ProductController::class, 'updateStatus'])->name('products.status.update');
+Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk.delete');
+Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
 
 // Sales Routes
-Route::get('/sales/dashboard', function () {
-    return view('sales.dashboard');
-})->name('sales.dashboard');
+Route::get('/sales/dashboard', [SaleController::class, 'dashboard'])->name('sales.dashboard');
+Route::get('/sales/pos', [SaleController::class, 'pos'])->name('sales.pos');
+Route::get('/sales/pricing', [SaleController::class, 'pricing'])->name('sales.pricing');
+Route::get('/sales/reports', [SaleController::class, 'reports'])->name('sales.reports');
 
-Route::get('/sales/retail', function () {
-    return view('sales.retail');
-})->name('sales.retail');
+Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
+Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('sales.show');
+Route::get('/sales/{sale}/edit', [SaleController::class, 'edit'])->name('sales.edit');
+Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
+Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
+Route::patch('/sales/{sale}/status', [SaleController::class, 'updateStatus'])->name('sales.status.update');
+Route::get('/sales/{sale}/invoice', [SaleController::class, 'generateInvoice'])->name('sales.invoice');
+Route::get('/sales/{sale}/receipt', [SaleController::class, 'generateReceipt'])->name('sales.receipt');
+Route::get('/sales/export', [SaleController::class, 'export'])->name('sales.export');
 
-Route::get('/sales/wholesale', function () {
-    return view('sales.wholesale');
-})->name('sales.wholesale');
+// Customer CRUD Routes
+Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+Route::get('/api/customers/search', [CustomerController::class, 'search'])->name('customers.search');
 
-Route::get('/sales/reports', function () {
-    return view('sales.reports');
-})->name('sales.reports');
+// Supplier CRUD Routes
+Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+Route::get('/suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
+Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
 
 // Purchases Routes
 Route::get('/purchases/dashboard', function () {
@@ -185,27 +217,19 @@ Route::get('/expense/management', function () {
 })->name('expense.management');
 
 // Settings Routes
-Route::get('/settings/dashboard', function () {
-    return view('settings.dashboard');
-})->name('settings.dashboard');
-
-Route::get('/settings/management', function () {
-    return view('settings.management');
-})->name('settings.management');
+Route::get('/settings/dashboard', [SettingsController::class, 'dashboard'])->name('settings.dashboard');
+Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+Route::post('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences.update');
+Route::post('/settings/system', [SettingsController::class, 'updateSystem'])->name('settings.system.update');
 
 // Users Routes
-Route::get('/users/dashboard', function () {
-    return view('users.dashboard');
-})->name('users.dashboard');
-
-Route::get('/users/management', function () {
-    return view('users.management');
-})->name('users.management');
-
-// Profile Routes
-Route::get('/profile', function () {
-    return view('profile.index');
-})->name('profile.index');
+Route::get('/users/dashboard', [UserController::class, 'dashboard'])->name('users.dashboard');
+Route::get('/users/management', [UserController::class, 'index'])->name('users.management');
+Route::post('/users', [UserController::class, 'store'])->name('users.store');
+Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::patch('/users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
 
 // Billing Routes
 Route::get('/billing', function () {

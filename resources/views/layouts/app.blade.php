@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Business Management System')</title>
     
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Manrope:wght@200..800&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -72,9 +78,9 @@
                             </svg>
                         </button>
                         <ul id="sales-dropdown" class="hidden mt-2 ml-4 space-y-1">
+                            <li><a href="{{ route('sales.pos') }}" class="block px-4 py-2 text-sm font-semibold {{ request()->routeIs('sales.pos') ? 'text-white bg-blue-600' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">New Sale (POS)</a></li>
+                            <li><a href="{{ route('sales.pricing') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('sales.pricing') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">Pricing</a></li>
                             <li><a href="{{ route('sales.dashboard') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('sales.dashboard') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">Sales Dashboard</a></li>
-                            <li><a href="{{ route('sales.retail') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('sales.retail') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">Retail Sales</a></li>
-                            <li><a href="{{ route('sales.wholesale') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('sales.wholesale') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">Wholesale Sales</a></li>
                             <li><a href="{{ route('sales.reports') }}" class="block px-4 py-2 text-sm {{ request()->routeIs('sales.reports') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700' }} rounded">Sales Reports</a></li>
                         </ul>
                     </li>
@@ -216,7 +222,45 @@
                             <div class="flex items-center">
                                
                                 <div>
-                                    <h1 class="text-xl font-semibold" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;">Dashboard</h1>
+                                    <h1 class="text-xl font-semibold" style="font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;">
+                                        @if(request()->routeIs('dashboard'))
+                                            Dashboard
+                                        @elseif(request()->routeIs('products.*'))
+                                            Products
+                                        @elseif(request()->routeIs('sales.*'))
+                                            Sales
+                                        @elseif(request()->routeIs('purchases.*'))
+                                            Purchases
+                                        @elseif(request()->routeIs('inventory.*'))
+                                            Inventory
+                                        @elseif(request()->routeIs('customers.*'))
+                                            Customers
+                                        @elseif(request()->routeIs('suppliers.*'))
+                                            Suppliers
+                                        @elseif(request()->routeIs('payments.*'))
+                                            Payments
+                                        @elseif(request()->routeIs('reports.*'))
+                                            Reports
+                                        @elseif(request()->routeIs('quotation.*'))
+                                            Quotation
+                                        @elseif(request()->routeIs('invoice.*'))
+                                            Invoice
+                                        @elseif(request()->routeIs('expense.*'))
+                                            Expense
+                                        @elseif(request()->routeIs('settings.*'))
+                                            Settings
+                                        @elseif(request()->routeIs('users.*'))
+                                            Users
+                                        @elseif(request()->routeIs('profile.*'))
+                                            Profile
+                                        @elseif(request()->routeIs('billing.*'))
+                                            Billing
+                                        @elseif(request()->routeIs('help.*'))
+                                            Help
+                                        @else
+                                            {{ ucfirst(request()->path()) }}
+                                        @endif
+                                    </h1>
                                 </div>
                             </div>
                         </div>
@@ -224,14 +268,19 @@
                         <!-- Search Bar - Centered -->
                         <div class="hidden md:flex flex-1 max-w-lg justify-center">
                             <div class="relative w-full">
-                                <input type="text" placeholder="Search products, customers, orders, reports..." 
-                                       class="w-full px-4 py-2 pl-12 pr-4 text-sm text-gray-900 bg-white bg-opacity-90 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder-gray-500">
-                                <svg class="absolute left-4 top-2.5 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                <button class="absolute right-3 top-1.5 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                    Search
-                                </button>
+                                <form method="GET" action="{{ route('search') }}" class="w-full">
+                                    <input type="text" 
+                                           name="q" 
+                                           placeholder="Search products, customers, orders, reports..." 
+                                           value="{{ request('q') }}"
+                                           class="w-full px-4 py-2 pl-12 pr-20 text-sm text-gray-900 bg-white bg-opacity-90 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder-gray-500">
+                                    <svg class="absolute left-4 top-2.5 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    <button type="submit" class="absolute right-3 top-1.5 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                        Search
+                                    </button>
+                                </form>
                             </div>
                         </div>
                         
@@ -250,8 +299,10 @@
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                                     </svg>
-                                    <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 animate-pulse"></span>
-                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                                    @if(($unreadNotificationsCount ?? 0) > 0)
+                                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 animate-pulse"></span>
+                                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ $unreadNotificationsCount }}</span>
+                                    @endif
                                 </button>
                                 <div id="notificationCenter" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50">
                                     <div class="p-3 border-b border-gray-200">
@@ -300,17 +351,14 @@
                             
                             <!-- Advanced User Profile Dropdown -->
                             <div class="relative">
+                                @if(Auth::check())
                                 <button onclick="toggleUserMenu()" class="flex items-center text-white hover:text-gray-300 transition-colors">
                                     <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-300 mr-2">
-                                        <div class="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                            </svg>
-                                        </div>
+                                        <img src="{{ Auth::user()->profile_picture_url }}" alt="Profile" class="w-full h-full object-cover">
                                     </div>
                                     <div class="hidden md:block text-left">
-                                        <p class="text-sm font-medium">Admin User</p>
-                                        <p class="text-xs opacity-90">System Administrator</p>
+                                        <p class="text-sm font-medium">{{ Auth::user()->name }}</p>
+                                        <p class="text-xs opacity-90">{{ Auth::user()->role ?? 'User' }}</p>
                                     </div>
                                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -320,17 +368,13 @@
                                     <!-- User Info Section -->
                                     <div class="px-4 py-3 border-b border-gray-200">
                                         <div class="flex items-center">
-                                            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300 mr-3">
-                                                <div class="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                </div>
+                                            <div class="w-10 h-10 rounded-full overflow-hidden">
+                                                <img src="{{ Auth::user()->profile_picture_url }}" alt="Profile" class="w-full h-full object-cover">
                                             </div>
                                             <div>
-                                                <p class="text-sm font-medium text-gray-900">System Administrator</p>
-                                                <p class="text-xs text-gray-500">admin@business.com</p>
-                                                <p class="text-xs text-green-600">● Online</p>
+                                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
+                                                <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
+                                                <p class="text-xs text-green-600">Active</p>
                                             </div>
                                         </div>
                                     </div>
@@ -369,14 +413,25 @@
                                             </svg>
                                             Help Center
                                         </a>
-                                        <a href="#" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                            </svg>
-                                            Log out
-                                        </a>
+                                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                                            @csrf
+                                            <button type="submit" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                                                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                                </svg>
+                                                Log out
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
+                                @else
+                                <a href="{{ route('login') }}" class="flex items-center text-white hover:text-gray-300 transition-colors">
+                                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Login
+                                </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -491,6 +546,9 @@
             }
         });
     </script>
+
+    <!-- Toast Notifications -->
+    @include('components.toast')
 
     </body>
 </html>
