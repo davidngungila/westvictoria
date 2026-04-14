@@ -24,13 +24,15 @@ class ProductController extends Controller
                 $q->where('name', 'like', '%' . $request->search . '%')
                   ->orWhere('sku', 'like', '%' . $request->search . '%')
                   ->orWhere('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('category', 'like', '%' . $request->search . '%');
+                  ->orWhereHas('category', function($query) use ($request) {
+                      $query->where('name', 'like', '%' . $request->search . '%');
+                  });
             });
         }
         
         // Filter by category
         if ($request->has('category') && $request->category) {
-            $query->where('category', $request->category);
+            $query->where('category_id', $request->category);
         }
         
         // Filter by status
@@ -46,7 +48,7 @@ class ProductController extends Controller
         $products = $query->paginate(15);
         
         // Get categories for filter dropdown
-        $categories = Product::distinct('category')->pluck('category')->filter();
+        $categories = Category::where('status', 'active')->orderBy('name')->pluck('name', 'id');
         
         return view('products.index', compact('products', 'categories'));
     }
@@ -133,9 +135,9 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         // Get dynamic data from database
-        $categories = Product::distinct('category')->pluck('category')->filter()->sort();
-        $suppliers = Product::distinct('supplier')->pluck('supplier')->filter()->sort();
-        $brands = Product::distinct('brand')->pluck('brand')->filter()->sort();
+        $categories = Category::where('status', 'active')->orderBy('name')->get();
+        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
+        $brands = Brand::where('status', 'active')->orderBy('name')->get();
         
         return view('products.edit', compact('product', 'categories', 'suppliers', 'brands'));
     }
@@ -153,9 +155,9 @@ class ProductController extends Controller
             'cost_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
             'min_quantity' => 'required|integer|min:0',
-            'category' => 'required|string|max:100',
-            'brand' => 'nullable|string|max:100',
-            'supplier' => 'nullable|string|max:100',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'status' => 'required|in:active,inactive,discontinued',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'barcode' => 'nullable|string|max:50|unique:products,barcode,' . $product->id,
@@ -281,14 +283,14 @@ class ProductController extends Controller
                 fputcsv($handle, [
                     $product->name,
                     $product->sku,
-                    $product->category,
+                    $product->category ? $product->category->name : '',
                     $product->price,
                     $product->cost_price,
                     $product->quantity,
                     $product->min_quantity,
                     $product->status,
-                    $product->brand,
-                    $product->supplier,
+                    $product->brand ? $product->brand->name : '',
+                    $product->supplier ? $product->supplier->name : '',
                     $product->created_at->format('Y-m-d H:i:s')
                 ]);
             }
